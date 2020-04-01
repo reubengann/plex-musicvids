@@ -132,8 +132,8 @@ if __name__ == '__main__':
         print('Success! Reload library.')
         exit(0)
     
-    added = add_to_playlist(session, playlist, files_not_in_playlist)
-    if added:
+    if files_not_in_playlist:
+        added = add_to_playlist(session, playlist, files_not_in_playlist)
         print("Added:", added)
     else:
         print('Up to date!')
