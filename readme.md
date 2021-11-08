@@ -7,8 +7,6 @@ Helper script to get music videos into Plex and form a large playlist of them
 
 2. Specify the name of the playlist  you made in plex
 3. Specify and a folder to place dummy mp3s. This folder should be in your music library. (Highlight Library, click plus sign to add, specify folder in "Add folders to library")
-4. Specify a valid temp folder
 
-# TODO:
-- Shuffle list (optional)
-- Detect problems with Plex database and advise a rebuild
+## To Run:
+```python playlist.py```

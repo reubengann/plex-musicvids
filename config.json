@@ -1,5 +1,5 @@
 {
-  "path_to_plex_db": "c:/Users/Reuben/AppData/Local/Plex Media Server/Plug-in Support/Databases/com.plexapp.plugins.library.db",
-  "videos_folder": "D:\\Videos\\Music Videos\\On Media Center",
-  "dummy_root": "D:\\Videos\\Music Videos\\Dummy"
+    "vids_folder": "E:\\Videos\\Music Videos\\On Media Center",
+    "dummy_root": "E:\\Videos\\Music Videos\\Dummy",
+    "playlist_name": "Music Vids"
 }
