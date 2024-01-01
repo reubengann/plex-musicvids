@@ -8,6 +8,7 @@ Uses ffmpeg and ffprobe to normalize mp4 files to -23 LUFS
 """
 
 import os
+from pathlib import Path
 import subprocess
 import json
 import re
@@ -33,10 +34,10 @@ TARGET_LUFS = -23
 
 
 def normalize_mp4(
-    infile_path: str,
-    outfile_path: str,
-    ffprobe_path: str,
-    ffmpeg_path: str,
+    infile_path: Path,
+    outfile_path: Path,
+    ffprobe_path: Path,
+    ffmpeg_path: Path,
     measure_only: bool = False,
 ):
     args = [
@@ -113,7 +114,7 @@ def normalize_mp4(
             raise Exception("Problem adjusting audio")
         print("OK")
     else:
-        print(infile_path, "is already normalized")
+        print(infile_path, "is already normalized. Copying file as-is.")
         if measure_only:
             return
         shutil.copyfile(infile_path, outfile_path)
