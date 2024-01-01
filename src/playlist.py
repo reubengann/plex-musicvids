@@ -49,6 +49,7 @@ class PlexMusicVideoHelper:
         print(
             f"Videos not in Plex: {len(self.video_file_names) - len(set(files_in_plex))}"
         )
+        print()
 
     def make_dummies(self):
         vids_not_in_plex = list(
@@ -64,7 +65,9 @@ class PlexMusicVideoHelper:
             else:
                 self.make_dummy_track(artist)
                 dummies_made += 1
-        print(f"Dummies made: {dummies_made}")
+        print(f"Dummies made: {dummies_made}.")
+        if dummies_made > 0:
+            print("Now refresh your Plex and reanalyze")
         if artists_folders_already_exist:
             print(
                 """
@@ -88,6 +91,13 @@ You can also try re-running with -f."""
         for vid in vids_not_in_plex:
             print(vid)
             any_issues = True
+        files_in_playlist = set(f.media_part.file for f in self.videos_in_playlist)
+        vids = set(self.video_file_names)
+        if vids - files_in_playlist:
+            num_not_in = len(vids - files_in_playlist)
+            print(
+                f"{num_not_in} video{'s are' if num_not_in > 1 else ' is'} in Plex but not in the playlist. Run add_to_playlist"
+            )
         if not any_issues:
             print("No issues found.")
 
@@ -246,18 +256,6 @@ def rename_dummy_artist(dummy_root, old_artist, new_artist):
 
 
 # if __name__ == "__main__":
-#     args = sys.argv[1:]
-#     helper = PlexMusicVideoHelper()
-#     helper.print_summary()
-#     if "-a" in args:
-#         print("Adding videos to playlist")
-#         helper.add_videos_to_playlist()
-#     if "-d" in args:
-#         print("Making dummies")
-#         helper.make_dummies()
-#     if "-l" in args:
-#         print("Analyzing")
-#         helper.analyze()
 #     if "-f" in args:
 #         print("Fixing artists")
 #         helper.fix_artists_with_bad_names()
