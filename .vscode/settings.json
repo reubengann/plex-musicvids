@@ -1,0 +1,15 @@
+{
+  "python.testing.pytestArgs": ["test"],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    },
+    "editor.formatOnType": true
+  },
+  "python.analysis.typeCheckingMode": "basic",
+  "testing.automaticallyOpenPeekView": "never"
+}

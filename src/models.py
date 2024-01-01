@@ -1,4 +1,13 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, ForeignKey, Text
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Float,
+    DateTime,
+    Boolean,
+    ForeignKey,
+    Text,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -6,8 +15,7 @@ Base = declarative_base()
 
 
 class PlexMetaDataItem(Base):
-
-    __tablename__ = 'metadata_items'
+    __tablename__ = "metadata_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     library_section_id = Column(Integer)
@@ -59,12 +67,11 @@ class PlexMetaDataItem(Base):
 
 
 class PlexPlayQueueGenerator(Base):
-
-    __tablename__ = 'play_queue_generators'
+    __tablename__ = "play_queue_generators"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    playlist_id = Column(Integer, ForeignKey('metadata_items.id'))
-    metadata_item_id = Column(Integer, ForeignKey('media_items.metadata_item_id'))
+    playlist_id = Column(Integer, ForeignKey("metadata_items.id"))
+    metadata_item_id = Column(Integer, ForeignKey("media_items.metadata_item_id"))
     uri = Column(String(255))
     limit = Column(Integer)
     continuous = Column(Boolean)
@@ -78,14 +85,13 @@ class PlexPlayQueueGenerator(Base):
 
 
 class PlexMediaItem(Base):
-
-    __tablename__ = 'media_items'
+    __tablename__ = "media_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     library_section_id = Column(Integer)
     section_location_id = Column(Integer)
-    metadata_item_id = Column(Integer, ForeignKey('metadata_items.id'), index=True)
-    metadata_item = relationship("MetadataItem", backref="media_items")
+    metadata_item_id = Column(Integer, ForeignKey("metadata_items.id"), index=True)
+    metadata_item = relationship("PlexMetaDataItem", backref="media_items")
     type_id = Column(Integer)
     width = Column(Integer)
     height = Column(Integer)
@@ -118,12 +124,11 @@ class PlexMediaItem(Base):
 
 
 class PlexMediaPart(Base):
-
-    __tablename__ = 'media_parts'
+    __tablename__ = "media_parts"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    media_item_id = Column(Integer, ForeignKey('media_items.id'), index=True)
-    media_item = relationship("MediaItem", backref="media_parts")
+    media_item_id = Column(Integer, ForeignKey("media_items.id"), index=True)
+    media_item = relationship("PlexMediaItem", backref="media_parts")
     directory_id = Column(Integer)
     hash = Column(String(255))
     open_subtitle_hash = Column(String(255))
@@ -137,11 +142,8 @@ class PlexMediaPart(Base):
     extra_data = Column(String(255))
 
 
-
-
 class PlexLibrarySection(Base):
-
-    __tablename__ = 'library_sections'
+    __tablename__ = "library_sections"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     library_id = Column(Integer)

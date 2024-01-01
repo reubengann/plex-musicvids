@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Analyze",
+      "type": "python",
+      "request": "launch",
+      "program": "plex-musicvids.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "analyze"
+      ]
+    }
+  ]
+}

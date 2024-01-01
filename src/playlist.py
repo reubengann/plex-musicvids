@@ -2,49 +2,58 @@ import os
 import sys
 import shutil
 import warnings
+
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from fuzzywuzzy import process as fuzzy_process
 from mutagen.easyid3 import EasyID3
-from random import shuffle
-import json
-import db_operations
+import src.db_operations as db_operations
 
-
-VIDEO_TYPES = ["mp4", "avi", "m2t", "m2ts", "m2v", "m4v", "mkv", "mov", "mpeg", "mpg", "mts",
-               "3g2", "3gp", "asf", "asx", "avc", "avs", "bivx", "bup", "divx", "dv", "dvr-ms",
-               "evo", "fli", "flv", "nsv", "nuv", "ogm", "ogv", "tp", "pva", "qt", "rm", "rmvb",
-               "sdp", "svq3", "strm", "ts", "ty", "vdr", "viv", "vob", "vp3", "wmv", "wpl",
-               "wtv", "xsp", "xvid", "webm"]
+from src.video_types import VIDEO_TYPES
 
 
 class PlexMusicVideoHelper:
-
-    def __init__(self, config):
+    def __init__(
+        self,
+        playlist_name: str,
+        vids_folder: str,
+        dummy_root: str,
+        temp_folder: str = R"C:\temp",
+    ):
         self.engine = db_operations.make_engine()
         self.session = db_operations.make_session(self.engine)
         all_playlists = db_operations.get_playlists(self.session)
-        self.playlist = find_playlist(config['playlist_name'], all_playlists)
-        self.videos_in_plex = db_operations.get_videos_in_plex(self.session, config['vids_folder'])
+        self.playlist = find_playlist(playlist_name, all_playlists)
+        self.videos_in_plex = db_operations.get_videos_in_plex(
+            self.session, vids_folder
+        )
         self.video_file_names_in_plex = [f.media_part.file for f in self.videos_in_plex]
-        self.video_file_names = get_video_files(config['vids_folder'])
-        self.videos_in_playlist = db_operations.get_videos_in_playlist(self.session, self.playlist.id)
-        self.dummy_root = config['dummy_root']
+        self.video_file_names = get_video_files(vids_folder)
+        self.videos_in_playlist = db_operations.get_videos_in_playlist(
+            self.session, self.playlist.id
+        )
+        self.dummy_root = dummy_root
         self.video_names_in_plex = [s.media_part.file for s in self.videos_in_plex]
         self.artists_in_plex = db_operations.get_artists_in_plex(self.session)
-        self.tempfolder = config.get('tempfolder', "c:\\temp")
+        self.tempfolder = temp_folder
 
     def print_summary(self):
         files_in_plex = self.video_file_names_in_plex
         # self.video_names_in_plex = [s.file for s in self.videos_in_plex]
         files_in_playlist = [f.media_part.file for f in self.videos_in_playlist]
         print(f"Videos in folder:   {len(self.video_file_names)}")
-        print(f"Videos in Plex:     {len(set(files_in_plex))} (plus {len(files_in_plex)-len(set(files_in_plex))} duplicates)")
+        print(
+            f"Videos in Plex:     {len(set(files_in_plex))} (plus {len(files_in_plex)-len(set(files_in_plex))} duplicates)"
+        )
         print(f"Videos in playlist: {len(files_in_playlist)}")
-        print(f"Videos not in Plex: {len(self.video_file_names) - len(set(files_in_plex))}")
+        print(
+            f"Videos not in Plex: {len(self.video_file_names) - len(set(files_in_plex))}"
+        )
 
     def make_dummies(self):
-        vids_not_in_plex = list(set(self.video_file_names).difference(self.video_names_in_plex))
+        vids_not_in_plex = list(
+            set(self.video_file_names).difference(self.video_names_in_plex)
+        )
         artists_not_in_plex = self.get_artists_not_in_plex(vids_not_in_plex)
         folders = get_folders(self.dummy_root)
         artists_folders_already_exist = False
@@ -57,25 +66,36 @@ class PlexMusicVideoHelper:
                 dummies_made += 1
         print(f"Dummies made: {dummies_made}")
         if artists_folders_already_exist:
-            print("""
+            print(
+                """
 Videos that should be recognized in Plex aren't in the database.
 Some artists may have slightly different names than Plex expects.
 You may need to go into Plex and "fix match" to the correct band.
-You can also try re-running with -f.""")
+You can also try re-running with -f."""
+            )
 
     def analyze(self):
-        vids_not_in_plex = list(set(self.video_file_names).difference(self.video_names_in_plex))
+        vids_not_in_plex = list(
+            set(self.video_file_names).difference(self.video_names_in_plex)
+        )
         artists_not_in_plex = self.get_artists_not_in_plex(vids_not_in_plex)
         folders = get_folders(self.dummy_root)
+        any_issues = False
         for artist in artists_not_in_plex:
             if os.path.join(self.dummy_root, artist) in folders:
                 print(f"Possible issue with artist: {artist}")
+                any_issues = True
         for vid in vids_not_in_plex:
             print(vid)
+            any_issues = True
+        if not any_issues:
+            print("No issues found.")
 
     def fix_artists_with_bad_names(self):
         bad_names = []
-        vids_not_in_plex = list(set(self.video_file_names).difference(self.video_names_in_plex))
+        vids_not_in_plex = list(
+            set(self.video_file_names).difference(self.video_names_in_plex)
+        )
         artists_not_in_plex = self.get_artists_not_in_plex(vids_not_in_plex)
         artist_names_in_plex = [a.title for a in self.artists_in_plex]
         folders = get_folders(self.dummy_root)
@@ -93,13 +113,20 @@ You can also try re-running with -f.""")
                     rename_videos_to_new_artist(vids_by_artist, correction)
                 rename_dummy_artist(self.dummy_root, artist, correction)
                 # Move the folder outside of the root so that it'll be removed
-                shutil.move(os.path.join(self.dummy_root, correction), os.path.join(self.tempfolder, correction))
+                shutil.move(
+                    os.path.join(self.dummy_root, correction),
+                    os.path.join(self.tempfolder, correction),
+                )
                 sequestered.append(correction)
         if sequestered:
-            input("Please rescan and press enter (this will temporarily remove the artists)")
+            input(
+                "Please rescan and press enter (this will temporarily remove the artists)"
+            )
             for s in sequestered:
                 # Move the folders back in
-                shutil.move(os.path.join(self.tempfolder, s), os.path.join(self.dummy_root, s))
+                shutil.move(
+                    os.path.join(self.tempfolder, s), os.path.join(self.dummy_root, s)
+                )
             input("Please rescan again and press enter (this puts them back in)")
 
     def add_videos_to_playlist(self):
@@ -118,12 +145,21 @@ You can also try re-running with -f.""")
         already_added = []
         for vid in videos_to_add:
             if vid.media_part.file not in already_added:
-                db_operations.add_video_to_playlist(self.session, self.playlist.id, vid, (len(self.videos_in_playlist) + 1))
+                db_operations.add_video_to_playlist(
+                    self.session,
+                    self.playlist.id,
+                    vid,
+                    (len(self.videos_in_playlist) + 1),
+                )
                 self.videos_in_playlist.append(vid)
                 already_added.append(vid.media_part.file)
 
     def get_vids_by_artist(self, artist):
-        return [a for a in self.video_file_names_in_plex if os.path.basename(a).startswith(artist)]
+        return [
+            a
+            for a in self.video_file_names_in_plex
+            if os.path.basename(a).startswith(artist)
+        ]
 
     def make_dummy_track(self, artist):
         root = self.dummy_root
@@ -132,12 +168,14 @@ You can also try re-running with -f.""")
         dummyfile = os.path.join(root, artist, f"{trackname}.mp3")
         shutil.copy2("dummy.mp3", dummyfile)
         meta = EasyID3(dummyfile)
-        meta['title'] = os.path.splitext(trackname)[0]
-        meta['artist'] = artist
+        meta["title"] = os.path.splitext(trackname)[0]
+        meta["artist"] = artist
         meta.save()
 
     def get_artists_not_in_plex(self, vids_not_in_plex):
-        missing_artists = [os.path.basename(v).split(' - ')[0] for v in vids_not_in_plex]
+        missing_artists = [
+            os.path.basename(v).split(" - ")[0] for v in vids_not_in_plex
+        ]
         missing_artists = sorted(list(set(missing_artists)))
         return list(set(missing_artists).difference(self.artists_in_plex))
 
@@ -154,19 +192,25 @@ def get_a_song_name_by(video_file_names, artist):
     for vid in video_file_names:
         if os.path.basename(vid).startswith(artist):
             trackname = os.path.splitext(os.path.basename(vid))[0]
-            return trackname.split(' - ')[1]
+            return trackname.split(" - ")[1]
 
 
 def get_video_files(vids_folder):
-    return [os.path.join(vids_folder, f) for f in os.listdir(vids_folder) if get_extension(f) in VIDEO_TYPES]
+    return [
+        os.path.join(vids_folder, f)
+        for f in os.listdir(vids_folder)
+        if get_extension(f) in VIDEO_TYPES
+    ]
 
 
 def get_extension(path):
-    if '.' not in path:
+    if "." not in path:
         return ""
     ext = (os.path.splitext(path)[1])[1:]
-    if (ext in VIDEO_TYPES and ' - ' not in path):
-        raise ValueError(f"Video file name is not formatted correctly: {path}\nPlease use 'Artist - Title.mp4'")
+    if ext in VIDEO_TYPES and " - " not in path:
+        raise ValueError(
+            f"Video file name is not formatted correctly: {path}\nPlease use 'Artist - Title.mp4'"
+        )
     return ext
 
 
@@ -182,7 +226,7 @@ def find_playlist(playlist_name, playlists):
 
 def rename_videos_to_new_artist(vids_by_artist, new_artist):
     for vid in vids_by_artist:
-        _, track = os.path.basename(vid).split(' - ')
+        _, track = os.path.basename(vid).split(" - ")
         # Rename video
         newpath = os.path.join(os.path.dirname(vid), new_artist + " - " + track)
         os.rename(vid, newpath)
@@ -191,85 +235,29 @@ def rename_videos_to_new_artist(vids_by_artist, new_artist):
 def rename_dummy_artist(dummy_root, old_artist, new_artist):
     for file in os.listdir(os.path.join(dummy_root, old_artist)):
         # rename all the mp3s
-        if file.endswith('.mp3'):
+        if file.endswith(".mp3"):
             meta = EasyID3(os.path.join(dummy_root, old_artist, file))
-            meta['artist'] = new_artist
+            meta["artist"] = new_artist
             meta.save()
     # rename the path
-    os.rename(os.path.join(dummy_root, old_artist), os.path.join(dummy_root, new_artist))
+    os.rename(
+        os.path.join(dummy_root, old_artist), os.path.join(dummy_root, new_artist)
+    )
 
 
-if __name__ == '__main__':
-    args = sys.argv[1:]
-    with open('config.json', 'r') as fin:
-        config = json.load(fin)
-    helper = PlexMusicVideoHelper(config)
-    helper.print_summary()
-    if '-a' in args:
-        print('Adding videos to playlist')
-        helper.add_videos_to_playlist()
-    if '-d' in args:
-        print('Making dummies')
-        helper.make_dummies()
-    if '-l' in args:
-        print('Analyzing')
-        helper.analyze()
-    if '-f' in args:
-        print('Fixing artists')
-        helper.fix_artists_with_bad_names()
-
-
-#     def shuffle_playlist(self):
-#         with sqlite3.connect(self.db_path) as conn:
-#             cur = conn.cursor()
-#             querystr = """
-#             SELECT id, metadata_item_id, [order] FROM play_queue_generators where playlist_id = %d
-#             """ % self.playlist.id
-#             cur.execute(querystr)
-#             rows = cur.fetchall()
-#         conn.close()
-#         neworder = [1000.0 * a for a in list(range(1, len(rows)+1))]
-#         shuffle(neworder)
-#         s = 'UPDATE play_queue_generators SET [order] = (case \n'
-#         for i, row in enumerate(rows):
-#             s += """when id = %d and metadata_item_id = %d then %.1f\n""" % (
-#                 row[0], row[1], neworder[i])
-#         s += 'end) where playlist_id = %d' % self.playlist.id
-#         with open(os.path.join(self.tempfolder, "PlexExecute.txt"), 'w') as fout:
-#             fout.write(s)
-#         print("Please execute the queries in " +
-#               os.path.join(self.tempfolder, "PlexExecute.txt"))
-
-#     def remove_deleted_files_from_playlist(self):
-#         a = self.playlist.videos
-#         b = self.vid_files
-#         s = 'DELETE FROM play_queue_generators\nWHERE\n'
-#         lines = []
-#         duration = 0
-#         for v in a:
-#             if v.file not in b:
-#                 lines.append('(playlist_id = %d and metadata_item_id = %d)' % (
-#                     self.playlist.id, v.metadata_id))
-#                 duration += v.duration
-#         s += '\n OR '.join(lines)
-#         s += ';\n'
-#         new_duration = self.playlist.duration - duration
-#         new_count = self.playlist.media_item_count - len(lines)
-#         s += "UPDATE metadata_items SET media_item_count=%d, duration=%d, updated_at='%s' WHERE id=%d" % (
-#             new_count, new_duration, str(time.strftime("%Y-%m-%d %H:%M:%S")), self.playlist.id)
-#         with open(os.path.join(self.tempfolder, "PlexExecute.txt"), 'w') as fout:
-#             fout.write(s)
-#         print("Please execute the queries in " +
-#               os.path.join(self.tempfolder, "PlexExecute.txt"))
-
-#    def remove_orphaned_files(self):
-#        vids_to_remove = []
-#        for v in self.videos_in_plex:
-#            if not v.file in self.vid_files:
-#                vids_to_remove.append(v)
-#        metadata_items_to_remove = [str(v.metadata_id) for v in vids_to_remove]
-#        media_items_to_remove = [str(v.media_item_id) for v in vids_to_remove]
-#        s = 'DELETE FROM media_parts WHERE media_item_id in (%s);\n' % ','.join(media_items_to_remove)
-#        s += 'DELETE FROM media_items WHERE id in (%s)\n' % ','.join(media_items_to_remove)
-#
-#        return vids_to_remove
+# if __name__ == "__main__":
+#     args = sys.argv[1:]
+#     helper = PlexMusicVideoHelper()
+#     helper.print_summary()
+#     if "-a" in args:
+#         print("Adding videos to playlist")
+#         helper.add_videos_to_playlist()
+#     if "-d" in args:
+#         print("Making dummies")
+#         helper.make_dummies()
+#     if "-l" in args:
+#         print("Analyzing")
+#         helper.analyze()
+#     if "-f" in args:
+#         print("Fixing artists")
+#         helper.fix_artists_with_bad_names()
