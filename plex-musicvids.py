@@ -35,8 +35,7 @@ def main() -> int:
         help="Music video playlist utility for Plex",
     )
 
-    # Add commands
-    cmd1_p = subp.add_parser("analyze", help="Analyze current state of playlist")
+    subp.add_parser("analyze", help="Analyze current state of playlist")
     norm_p = subp.add_parser(
         "normalize", help="Normalize the volume of a video file or files"
     )
@@ -47,8 +46,6 @@ def main() -> int:
     )
     subp.add_parser("add_to_playlist", help="Add videos to the playlist")
 
-    # Add command line arguments to the commands
-    # cmd1_p.add_argument("query")
     args = parser.parse_args()
     match args.subparser_name:
         case "analyze":
@@ -87,12 +84,14 @@ def main() -> int:
                 return 1
             helper.print_summary()
             helper.make_dummies()
+            return 0
         case "add_to_playlist":
             helper = get_helper()
             if helper is None:
                 return 1
             helper.print_summary()
             helper.add_videos_to_playlist()
+            return 0
         case _:
             parser.print_help()
             return 1
