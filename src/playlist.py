@@ -1,5 +1,4 @@
 import os
-import sys
 import shutil
 import warnings
 
@@ -39,7 +38,6 @@ class PlexMusicVideoHelper:
 
     def print_summary(self):
         files_in_plex = self.video_file_names_in_plex
-        # self.video_names_in_plex = [s.file for s in self.videos_in_plex]
         files_in_playlist = [f.media_part.file for f in self.videos_in_playlist]
         print(f"Videos in folder:   {len(self.video_file_names)}")
         print(
@@ -198,14 +196,15 @@ def get_folders(root):
     return directory_list
 
 
-def get_a_song_name_by(video_file_names, artist):
+def get_a_song_name_by(video_file_names: list[str], artist: str) -> str:
     for vid in video_file_names:
         if os.path.basename(vid).startswith(artist):
             trackname = os.path.splitext(os.path.basename(vid))[0]
             return trackname.split(" - ")[1]
+    raise Exception(f"Could not find {artist} in video_file_names")
 
 
-def get_video_files(vids_folder):
+def get_video_files(vids_folder) -> list[str]:
     return [
         os.path.join(vids_folder, f)
         for f in os.listdir(vids_folder)
