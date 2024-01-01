@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import shutil
 import warnings
 
@@ -48,6 +49,27 @@ class PlexMusicVideoHelper:
             f"Videos not in Plex: {len(self.video_file_names) - len(set(files_in_plex))}"
         )
         print()
+
+    def troubleshoot(self):
+        print("Looking for issues")
+        for i in set(self.video_file_names) - set(self.video_names_in_plex):
+            artist_names_in_plex = [str(a.title) for a in self.artists_in_plex]
+            artist_from_filename = Path(i).name.split(" - ")[0]
+            if artist_from_filename in artist_names_in_plex:
+                print(
+                    f"It looks like a video by {artist_from_filename} isn't in Plex even though {artist_from_filename} is in Plex."
+                )
+                print(
+                    "Often the only way to fix this is to remove the artist and add it again."
+                )
+                print(
+                    f"I'm going to delete {artist_from_filename} from the dummies folder. After refreshing Plex, the artist should vanish."
+                )
+                print("Then try adding dummies again.")
+                artist_dummy_folder = Path(self.dummy_root) / artist_from_filename
+                if not artist_dummy_folder.exists():
+                    raise Exception()
+                shutil.rmtree(artist_dummy_folder)
 
     def make_dummies(self):
         vids_not_in_plex = list(

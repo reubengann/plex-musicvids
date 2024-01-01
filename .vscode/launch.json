@@ -11,6 +11,17 @@
       "args": [
         "analyze"
       ]
+    },
+    {
+      "name": "Troubleshoot",
+      "type": "python",
+      "request": "launch",
+      "program": "plex-musicvids.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "troubleshoot"
+      ]
     }
   ]
 }

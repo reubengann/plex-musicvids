@@ -99,7 +99,7 @@ def normalize_mp4(
     gain_log = round(-(current_lufs - TARGET_LUFS), 2)
 
     if math.fabs(gain_log) > 1:
-        print("adjusting", infile_path, "by", gain_log, "dB ... ", end="")
+        print("adjusting", infile_path, "by", gain_log, "dB ... ", end="", flush=True)
         if measure_only:
             print("OK")
             return

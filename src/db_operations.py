@@ -51,7 +51,7 @@ def get_videos_in_playlist(session, playlist_id):
     return [PlexPlaylistVideo(*r) for r in results]
 
 
-def get_artists_in_plex(session):
+def get_artists_in_plex(session) -> list[PlexMetaDataItem]:
     return session.query(PlexMetaDataItem).filter(
         PlexMetaDataItem.metadata_type == ARTIST_METADATA_TYPE
     )

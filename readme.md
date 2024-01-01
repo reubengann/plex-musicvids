@@ -66,3 +66,9 @@ python plex-musicvids.py normalize path_of_new_video music_video_folder
 python plex-musicvids.py make_dummies
 python plex-musicvids.py add_to_playlist
 ```
+
+### Troubleshooting
+
+When adding a video with an existing artist, Plex may not pick up on the change, and the dummy folder needs to be
+deleted and re-added. Try `python plex-musicvids.py troubleshoot` and `python plex-musicvids.py make_dummies` if
+this happens.

@@ -45,6 +45,7 @@ def main() -> int:
         "make_dummies", help="Make dummy artists so that music videos will be picked up"
     )
     subp.add_parser("add_to_playlist", help="Add videos to the playlist")
+    subp.add_parser("troubleshoot", help="Try to fix missing tracks")
 
     args = parser.parse_args()
     match args.subparser_name:
@@ -93,6 +94,13 @@ def main() -> int:
                 return 1
             helper.print_summary()
             helper.add_videos_to_playlist()
+            return 0
+        case "troubleshoot":
+            helper = get_helper()
+            if helper is None:
+                return 1
+            helper.print_summary()
+            helper.troubleshoot()
             return 0
         case _:
             parser.print_help()
