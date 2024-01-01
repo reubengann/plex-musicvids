@@ -68,8 +68,10 @@ def main() -> int:
             if not infile.exists():
                 print(f"{infile} does not exist")
                 return 1
-            if infile.is_dir() or outfile.is_dir():
-                raise NotImplementedError("Only files done")
+            if infile.is_dir():
+                raise NotImplementedError("Multiple files not done")
+            if outfile.is_dir():
+                outfile = outfile / infile.name
             ffmpeg_bin_path = Path(settings.ffmpeg_bin)
             if not ffmpeg_bin_path.exists():
                 print(f"The ffmpeg binary file {ffmpeg_bin_path} does not exist")

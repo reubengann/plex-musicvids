@@ -28,6 +28,8 @@ Valid commands
 
 ## Step-by-step
 
+### Creating the library
+
 1. Make sure your videos are all in one folder and named like `FolderName/Artist Name - Descriptive Text.ext`
 2. (Optional) Normalize your tracks with `python plex-musicvids.py normalize`
 3. Launch the Plex Web App
@@ -39,9 +41,21 @@ where your music videos are stored
 8. Create a playlist
 9. Create a folder for dummy tracks
 10. Add the dummy folder as a music library
-11. Enter your dummy folder, music video folder, and playlist name into .env
+11. Run `copy .env.template .env`. Open .env and enter your dummy folder, music video folder, and playlist name.
 12. Run `python plex-musicvids.py make_dummies` and then refresh your library
 13. Go to the artists and make sure the music videos are found
 14. Run `python plex-musicvids.py analyze` to check for any problems. You may need to adjust some artist names in 
 the video files to match what Plex expects
 15. Once you have all the videos recognized, add them to the playlist using `python plex-musicvids.py add_to_playlist`
+
+### Updating the library
+
+After the collection is working, you can add new videos easily. If the new videos are already known artists, you can just
+`python plex-musicvids.py add_to_playlist`. Otherwise, you may need to `make_dummies` first.
+
+My preferred way to add them is 
+```bash
+python plex-musicvids.py normalize path_of_new_video music_video_folder
+python plex-musicvids.py make_dummies
+python plex-musicvids.py add_to_playlist
+```
