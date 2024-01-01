@@ -2,6 +2,13 @@
 
 Helper script to get music videos into Plex and form a large playlist of them
 
+## Caveats
+
+This program _modifies your Plex database_. I have never had an issue with this, but if you are at all worried or attached
+to your current Plex setup, **make sure you backup your database before using this!**. 
+
+I have only tested this in Windows.
+
 ## Setup
 
 ```bash
