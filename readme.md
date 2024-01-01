@@ -14,7 +14,7 @@ I have only tested this in Windows.
 ```bash
 pip install -r requirements.txt
 ```
-In your environment or in a .env file, specify the location of 
+(See below for step-by-step instructions.) In your environment or in a .env file, specify the location of 
 
 - VIDS_FOLDER: a folder with your videos for "vids_folder". This is the same folder that you set up in "Local Media Assets" under "Agents -> artists" in Plex settings 
 - PLAYLIST_NAME: the name of the playlist you made in plex
