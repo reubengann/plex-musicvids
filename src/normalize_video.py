@@ -50,6 +50,7 @@ def normalize_mp4(
         "-show_streams",
         infile_path,
     ]
+    print("Measuring volume", flush=True)
     process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = process.communicate()
     if err:
