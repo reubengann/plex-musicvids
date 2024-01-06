@@ -18,19 +18,12 @@ import shutil
 TARGET_LUFS = -23
 
 
-# def normalize_mp4s(measure_only: bool = False):
-#     ffmpeg_bin = r"C:\ffmpeg\bin"
-#     ffprobe_path = os.path.join(ffmpeg_bin, "ffprobe")
-#     ffmpeg_path = os.path.join(ffmpeg_bin, "ffmpeg")
-
-#     root_path = r"C:\Users\Reuben\Videos\fixed"
-
-#     if not os.path.exists(os.path.join(root_path, "norm")) and not measure_only:
-#         os.mkdir(os.path.join(root_path, "norm"))
-
-#     for file_name in [s for s in os.listdir(root_path) if s.endswith("mp4")]:
-#         file_path = os.path.join(root_path, file_name)
-#         normalize_mp4(file_path, ffprobe_path, ffmpeg_path, measure_only)
+def normalize_mp4s_folder(ffmpeg_bin: Path, infolder: Path, outfolder: Path):
+    ffprobe_path = ffmpeg_bin / "ffprobe"
+    ffmpeg_path = ffmpeg_bin / "ffmpeg"
+    for inpath in infolder.glob("*"):
+        outpath = outfolder / inpath.name
+        normalize_mp4(inpath, outpath, ffprobe_path, ffmpeg_path)
 
 
 def normalize_mp4(

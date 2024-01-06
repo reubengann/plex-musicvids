@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 import sys
-from src.normalize_video import normalize_mp4
+from src.normalize_video import normalize_mp4, normalize_mp4s_folder
 from src.playlist import PlexMusicVideoHelper
 
 from src.project_settings import settings
@@ -69,10 +69,11 @@ def main() -> int:
     )
     subp.add_parser("add_to_playlist", help="Add videos to the playlist")
     subp.add_parser("troubleshoot", help="Try to fix missing tracks")
-    trim_p = subp.add_parser("trim", help="Trim a video (frame accurate)")
-    trim_p.add_argument("--infile", help="Input file", required=True)
-    trim_p.add_argument("--outfile", help="Output file", required=True)
-    trim_p.add_argument("--start", help="Start time", required=True)
+    # trim_p = subp.add_parser("trim", help="Trim a video (frame accurate)")
+    # trim_p.add_argument("--infile", help="Input file", required=True)
+    # trim_p.add_argument("--outfile", help="Output file", required=True)
+    # trim_p.add_argument("--start", help="Start time", required=True)
+    # trim_p.add_argument("--end", help="Start time", required=False)
     args = parser.parse_args()
     match args.subparser_name:
         case "analyze":
@@ -92,17 +93,19 @@ def main() -> int:
                 return 1
             infile = Path(args.infile)
             outfile = Path(args.outfile)
-            if not infile.exists():
-                print(f"{infile} does not exist")
-                return 1
-            if infile.is_dir():
-                raise NotImplementedError("Multiple files not done")
-            if outfile.is_dir():
-                outfile = outfile / infile.name
             ffmpeg_bin_path = Path(settings.ffmpeg_bin)
             if not ffmpeg_bin_path.exists():
                 print(f"The ffmpeg binary file {ffmpeg_bin_path} does not exist")
                 return 1
+            if not infile.exists():
+                print(f"{infile} does not exist")
+                return 1
+            if infile.is_dir():
+                normalize_mp4s_folder(ffmpeg_bin_path, infile, outfile)
+                return 0
+            if outfile.is_dir():
+                outfile = outfile / infile.name
+
             ffprobe_path = ffmpeg_bin_path / "ffprobe"
             ffmpeg_path = ffmpeg_bin_path / "ffmpeg"
             normalize_mp4(infile, outfile, ffprobe_path, ffmpeg_path)
@@ -128,22 +131,26 @@ def main() -> int:
             helper.print_summary()
             helper.troubleshoot()
             return 0
-        case "trim":
-            infile = Path(args.infile)
-            outfile = Path(args.outfile)
-            if not infile.exists():
-                print(f"{infile} does not exist")
-                return 1
-            if outfile.exists():
-                print(f"{outfile} already exists.")
-                return 1
-            ffmpeg_bin = get_ffmpeg_bin_path()
-            if ffmpeg_bin is None:
-                print("ffmpeg binary path not found")
-                return 1
-            start_timestamp = parse_timestamp(args.start)
-            trim_video(ffmpeg_bin, infile, outfile, start_timestamp)
-            return 0
+        # case "trim":
+        #     infile = Path(args.infile)
+        #     outfile = Path(args.outfile)
+        #     if not infile.exists():
+        #         print(f"{infile} does not exist")
+        #         return 1
+        #     if outfile.exists():
+        #         print(f"{outfile} already exists.")
+        #         return 1
+        #     ffmpeg_bin = get_ffmpeg_bin_path()
+        #     if ffmpeg_bin is None:
+        #         print("ffmpeg binary path not found")
+        #         return 1
+        #     start_timestamp = parse_timestamp(args.start)
+        #     if args.end:
+        #         end_timestamp = parse_timestamp(args.end)
+        #     else:
+        #         end_timestamp = None
+        #     trim_video(ffmpeg_bin, infile, outfile, start_timestamp, end_timestamp)
+        #     return 0
         case _:
             parser.print_help()
             return 1
