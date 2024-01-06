@@ -5,6 +5,7 @@ from src.normalize_video import normalize_mp4
 from src.playlist import PlexMusicVideoHelper
 
 from src.project_settings import settings
+from src.trim_video import trim_video
 
 
 def get_helper() -> PlexMusicVideoHelper | None:
@@ -28,6 +29,28 @@ def get_helper() -> PlexMusicVideoHelper | None:
     )
 
 
+def get_ffprobe_path() -> Path | None:
+    if settings.ffmpeg_bin is None:
+        print(
+            "FFMPEG_BIN is not set. Please modify your .env file or environment variables"
+        )
+        return None
+    ffmpeg_bin_path = Path(settings.ffmpeg_bin)
+    if not ffmpeg_bin_path.exists():
+        print(f"The ffmpeg binary file {ffmpeg_bin_path} does not exist")
+        return None
+    return ffmpeg_bin_path / "ffprobe"
+
+
+def get_ffmpeg_bin_path() -> Path | None:
+    if settings.ffmpeg_bin is None:
+        print(
+            "FFMPEG_BIN is not set. Please modify your .env file or environment variables"
+        )
+        return None
+    return Path(settings.ffmpeg_bin)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     subp = parser.add_subparsers(
@@ -46,7 +69,10 @@ def main() -> int:
     )
     subp.add_parser("add_to_playlist", help="Add videos to the playlist")
     subp.add_parser("troubleshoot", help="Try to fix missing tracks")
-
+    trim_p = subp.add_parser("trim", help="Trim a video (frame accurate)")
+    trim_p.add_argument("--infile", help="Input file", required=True)
+    trim_p.add_argument("--outfile", help="Output file", required=True)
+    trim_p.add_argument("--start", help="Start time", required=True)
     args = parser.parse_args()
     match args.subparser_name:
         case "analyze":
@@ -102,9 +128,40 @@ def main() -> int:
             helper.print_summary()
             helper.troubleshoot()
             return 0
+        case "trim":
+            infile = Path(args.infile)
+            outfile = Path(args.outfile)
+            if not infile.exists():
+                print(f"{infile} does not exist")
+                return 1
+            if outfile.exists():
+                print(f"{outfile} already exists.")
+                return 1
+            ffmpeg_bin = get_ffmpeg_bin_path()
+            if ffmpeg_bin is None:
+                print("ffmpeg binary path not found")
+                return 1
+            start_timestamp = parse_timestamp(args.start)
+            trim_video(ffmpeg_bin, infile, outfile, start_timestamp)
+            return 0
         case _:
             parser.print_help()
             return 1
+
+
+def parse_timestamp(s: str):
+    if ":" not in s:
+        return s
+    minute_part, second_part = s.split(":")
+    minute_secs = int(minute_part) * 60
+    print(minute_secs)
+    if "." in second_part:
+        seconds, frac = second_part.split(".")
+    else:
+        seconds = second_part
+        frac = "000"
+    seconds = str(minute_secs + int(seconds))
+    return f"{seconds}.{frac}"
 
 
 if __name__ == "__main__":
