@@ -99,7 +99,13 @@ def normalize_mp4(
             return
         args = [ffmpeg_path, "-v", "quiet"]
         args += ["-i", infile_path]
-        args += ["-af", "volume=volume={}dB".format(gain_log), outfile_path]
+        args += [
+            "-af",
+            "volume=volume={}dB".format(gain_log),
+            "-c:v",
+            "copy",
+            outfile_path,
+        ]
 
         process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = process.communicate()
