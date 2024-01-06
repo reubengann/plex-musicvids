@@ -194,7 +194,10 @@ You can also try re-running with -f."""
     def make_dummy_track(self, artist):
         root = self.dummy_root
         trackname = get_a_song_name_by(self.video_file_names, artist)
-        os.mkdir(os.path.join(root, artist))
+        if os.path.exists(os.path.join(root, artist)):
+            print(f"Warning: {os.path.join(root, artist)} already exists")
+        else:
+            os.mkdir(os.path.join(root, artist))
         dummyfile = os.path.join(root, artist, f"{trackname}.mp3")
         shutil.copy2("dummy.mp3", dummyfile)
         meta = EasyID3(dummyfile)
